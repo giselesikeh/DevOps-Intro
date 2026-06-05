@@ -145,4 +145,37 @@ I starred the course repository and the `simple-container-com/api` repository. I
 
 Starring repositories helps bookmark useful projects and increases their visibility in the open-source community. Following developers helps me discover their work, learn from their activity, and build professional connections for future collaboration.
 
+## Bonus Task — Branch Protection and Required Signed Commits
+
+I configured branch protection on my fork's `main` branch with the following rules enabled:
+
+- Require signed commits
+- Require a pull request before merging
+- Require linear history
+
+![Branch protection rules](screenshots/branch_protection.jpeg)
+
+To test the rule, I created an unsigned empty commit and tried to push it directly to `main`:
+
+```bash
+git commit --no-gpg-sign -s --allow-empty -m "test: unsigned commit should fail"
+git push origin main
+```
+
+GitHub rejected the push with this message:
+
+```text
+remote: Bypassed rule violations for refs/heads/main:
+remote:
+remote: - Commits must have verified signatures.
+remote:
+remote: Found 1 violation:
+remote:
+remote: 4c47506d9eacc2d506e7eef7036cdaf76fc3d90
+remote:
+remote: - Changes must be made through a pull request.
+```
+
+If Knight Capital had used a protected production deployment branch with required signed commits and pull-request review, the risky release would have had stronger gates before reaching production. Branch protection would not solve every deployment problem by itself, but it would make unauthorized or unreviewed changes harder to ship. Combined with automated deployment checks, staged rollout, and rollback mechanisms, it would have reduced the chance of one missed or inconsistent server causing a major incident.
+
 
