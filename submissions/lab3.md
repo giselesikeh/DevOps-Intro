@@ -32,17 +32,8 @@ All GitHub Actions used in the workflow are pinned by full commit SHA.
 
 ### Green CI run
 
-Green CI run: https://github.com/giselesikeh/DevOps-Intro/actions/runs/27276219009
+Green CI run: https://github.com/giselesikeh/DevOps-Intro/actions/runs/27276906098
 
-Evidence from the final successful run:
-
-- `vet (1.23)` passed
-- `vet (1.24)` passed
-- `test (1.23)` passed
-- `test (1.24)` passed
-- `lint` passed
-
-![Green CI run](images/lab3-green-run.png.jpeg)
 
 ### Failed gate proof
 
