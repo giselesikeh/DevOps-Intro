@@ -623,6 +623,8 @@ Verify return code: 18 (self-signed certificate)
 
 The negotiation step that effectively kills TLS 1.0 and TLS 1.1 is the version and cipher negotiation during `ClientHello` and `ServerHello`. The client offers supported modern protocol versions and cipher suites, and the server chooses one. In this capture, the final negotiated protocol was `TLSv1.3`, not TLS 1.0 or TLS 1.1. In modern deployments, servers should disable TLS 1.0 and TLS 1.1, so if a client only supports those old versions, the server should refuse the handshake instead of selecting an insecure protocol.
 
+Note: I could not use Caddy from apt because it was not available in my Ubuntu package sources, so I used OpenSSL `s_server` on port `8443` as a local TLS endpoint. I decoded the handshake using `curl -vk`, `openssl s_client`, and the captured `lab4-tls.pcap`. This still shows the ClientHello, ServerHello, negotiated TLS version/cipher, and certificate chain.
+
 ---
 
 ## What surprised me
