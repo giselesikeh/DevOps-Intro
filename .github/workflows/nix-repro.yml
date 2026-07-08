@@ -1,0 +1,80 @@
+name: Nix Reproducibility
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-a:
+    name: Build image A
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.digest.outputs.digest }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Build deterministic OCI image
+        run: nix build .#docker
+
+      - name: Compute image tarball digest
+        id: digest
+        run: |
+          digest="$(sha256sum result | awk '{print $1}')"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "digest=$digest"
+
+  build-b:
+    name: Build image B
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.digest.outputs.digest }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Build deterministic OCI image
+        run: nix build .#docker
+
+      - name: Compute image tarball digest
+        id: digest
+        run: |
+          digest="$(sha256sum result | awk '{print $1}')"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "digest=$digest"
+
+  compare-digests:
+    name: Compare image digests
+    runs-on: ubuntu-24.04
+    needs:
+      - build-a
+      - build-b
+    steps:
+      - name: Compare digests
+        run: |
+          echo "digest A: ${{ needs.build-a.outputs.digest }}"
+          echo "digest B: ${{ needs.build-b.outputs.digest }}"
+
+          if [ "${{ needs.build-a.outputs.digest }}" != "${{ needs.build-b.outputs.digest }}" ]; then
+            echo "Digest mismatch: reproducibility check failed"
+            exit 1
+          fi
+
+          echo "Digests match: reproducibility check passed"
