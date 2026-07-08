@@ -1,0 +1,7 @@
+.git
+.gitignore
+Dockerfile
+quicknotes.exe
+data/
+*.test
+coverage.out

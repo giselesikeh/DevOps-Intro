@@ -1,0 +1,73 @@
+name: Release QuickNotes Image
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/quicknotes
+
+jobs:
+  build-and-push:
+    name: Build and push GHCR image
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Validate release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag ${GITHUB_REF_NAME} is not semver-like vMAJOR.MINOR.PATCH"
+            exit 1
+          fi
+
+      - name: Clone repository at tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "${GITHUB_REF_NAME}" "https://github.com/${GITHUB_REPOSITORY}.git" .
+
+      - name: Compute lowercase image name
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="${REGISTRY}/${IMAGE_NAME}"
+          echo "IMAGE_LC=${image,,}" >> "$GITHUB_ENV"
+          echo "Image will be pushed as ${image,,}"
+
+      - name: Login to ghcr.io
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "${GITHUB_TOKEN}" | docker login "${REGISTRY}" -u "${GITHUB_ACTOR}" --password-stdin
+
+      - name: Build image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build \
+            --pull \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.version=${GITHUB_REF_NAME}" \
+            --tag "${IMAGE_LC}:${GITHUB_REF_NAME}" \
+            --tag "${IMAGE_LC}:latest" \
+            ./app
+
+      - name: Push image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker push "${IMAGE_LC}:${GITHUB_REF_NAME}"
+          docker push "${IMAGE_LC}:latest"
+          echo "Pushed ${IMAGE_LC}:${GITHUB_REF_NAME}"
+          echo "Pushed ${IMAGE_LC}:latest"
